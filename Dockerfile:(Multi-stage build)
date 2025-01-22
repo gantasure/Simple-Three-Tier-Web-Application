@@ -1,0 +1,21 @@
+# Build the frontend
+FROM node:18-alpine AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ .
+RUN npm run build
+
+# Build the backend
+FROM node:18-alpine AS backend-build
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ .
+
+# Final image
+FROM nginx:alpine
+COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html
+COPY --from=backend-build /app/backend /app/backend
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
